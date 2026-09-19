@@ -1,0 +1,266 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Bookforge — Docker Compose (Production)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# HASZNÁLAT:
+#   make docker_prod-up      # Indítás
+#   make docker_prod-down    # Leállítás
+#   make logs                # Logok követése
+#
+# KONFIGURÁCIÓ: minden érték a 05_config/.env fájlból jön.
+#
+# KÜLÖNBSÉG a compose.dev.yaml-tól (kizárólag Docker Compose limitáció):
+#   1. bookforge-postgres: NINCS külső port (biztonság)
+#   2. bookforge-redis: NINCS külső port (biztonság)
+#   3. bookforge-stripe-cli: NINCS (valódi Stripe webhook-ot használunk)
+#   Minden más — environment változók, hálózatok, volume-ok — AZONOS.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: bookforge
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🧠 BACKEND
+  # ═══════════════════════════════════════════════════════════════════════════════
+  bookforge-backend:
+    image: bookforge-backend:latest
+    container_name: bookforge-backend
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      bookforge-postgres:
+        condition: service_healthy
+      bookforge-redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      LOCAL: /app/logs
+      APP_ENV: ${APP_ENV}
+      API_HOST: ${API_HOST}
+      API_PORT: ${API_PORT}
+      BASE_URL: ${BASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      DB_HOST: bookforge-postgres
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL_MODE: ${DB_SSL_MODE}
+      DB_SCHEMA: ${DB_SCHEMA}
+      DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS}
+      REDIS_HOST: bookforge-redis
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+      JWT_REFRESH_EXPIRATION_HOURS: ${JWT_REFRESH_EXPIRATION_HOURS}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL_PRIMARY: ${OPENAI_MODEL_PRIMARY}
+      OPENAI_MODEL_PREMIUM: ${OPENAI_MODEL_PREMIUM}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_STANDARD_MONTHLY: ${STRIPE_PRICE_STANDARD_MONTHLY}
+      STRIPE_PRICE_STANDARD_YEARLY: ${STRIPE_PRICE_STANDARD_YEARLY}
+      STRIPE_PRICE_PREMIUM_MONTHLY: ${STRIPE_PRICE_PREMIUM_MONTHLY}
+      STRIPE_PRICE_PREMIUM_YEARLY: ${STRIPE_PRICE_PREMIUM_YEARLY}
+      STRIPE_PRICE_ENTERPRISE_CUSTOM: ${STRIPE_PRICE_ENTERPRISE_CUSTOM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
+      GOOGLE_OAUTH_REDIRECT_URL: ${GOOGLE_OAUTH_REDIRECT_URL}
+      FACEBOOK_OAUTH_CLIENT_ID: ${FACEBOOK_OAUTH_CLIENT_ID}
+      FACEBOOK_OAUTH_CLIENT_SECRET: ${FACEBOOK_OAUTH_CLIENT_SECRET}
+      FACEBOOK_OAUTH_REDIRECT_URL: ${FACEBOOK_OAUTH_REDIRECT_URL}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      CORS_MAX_AGE: ${CORS_MAX_AGE}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED}
+      RATE_LIMIT_REQUESTS_PER_MINUTE: ${RATE_LIMIT_REQUESTS_PER_MINUTE}
+      LOG_LEVEL: ${LOG_LEVEL}
+      LOG_FORMAT: ${LOG_FORMAT}
+      LOG_COLOR: ${LOG_COLOR}
+      LOG_ASYNC: ${LOG_ASYNC}
+      LOG_ASYNC_BUFFER: ${LOG_ASYNC_BUFFER}
+      LOG_FILE_ENABLED: ${LOG_FILE_ENABLED}
+      LOG_FILE_PATH: ${LOG_FILE_PATH}
+      LOG_FILE_FORMAT: ${LOG_FILE_FORMAT}
+      LOG_FILE_MAX_SIZE_MB: ${LOG_FILE_MAX_SIZE_MB}
+      LOG_FILE_MAX_BACKUPS: ${LOG_FILE_MAX_BACKUPS}
+      LOG_FILE_MAX_AGE_DAYS: ${LOG_FILE_MAX_AGE_DAYS}
+      LOG_FILE_COMPRESS: ${LOG_FILE_COMPRESS}
+      SNOWFLAKE_NODE_ID: ${SNOWFLAKE_NODE_ID}
+      # USD_TO_HUF és EUR_TO_HUF: config.yaml-ban van a fallback, MNB job frissíti DB-ben
+      FREE_TIER_LIMIT: ${FREE_TIER_LIMIT}
+      STANDARD_TIER_LIMIT: ${STANDARD_TIER_LIMIT}
+      PREMIUM_TIER_LIMIT: ${PREMIUM_TIER_LIMIT}
+      FEATURE_TEAM_COLLABORATION: ${FEATURE_TEAM_COLLABORATION}
+      FEATURE_BRAND_VOICE: ${FEATURE_BRAND_VOICE}
+      FEATURE_CONTENT_CALENDAR: ${FEATURE_CONTENT_CALENDAR}
+      FEATURE_API_ACCESS: ${FEATURE_API_ACCESS}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED}
+      DEBUG_MODE: ${DEBUG_MODE}
+    volumes:
+      - ./logs:/app/logs:rw
+    networks:
+      - internal
+      - frontend_net
+    expose:
+      - "${API_PORT}"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q -O - http://localhost:${API_PORT}/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 40s
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🌐 FRONTEND
+  # ═══════════════════════════════════════════════════════════════════════════════
+  bookforge-frontend:
+    image: bookforge-frontend:latest
+    container_name: bookforge-frontend
+    restart: unless-stopped
+    depends_on:
+      bookforge-backend:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV}
+      LOCAL: /app/logs
+      FRONTEND_HOST: ${FRONTEND_HOST}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      FRONTEND_URL: ${FRONTEND_URL}
+      BACKEND_URL: http://${BACKEND_SERVICE}:${API_PORT}
+      BACKEND_SERVICE: ${BACKEND_SERVICE}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL}
+      LOG_ASYNC: ${LOG_ASYNC}
+      LOG_ASYNC_BUFFER: ${LOG_ASYNC_BUFFER}
+    volumes:
+      - ./logs:/app/logs:rw
+    networks:
+      - frontend_net
+    expose:
+      - "${FRONTEND_PORT}"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🐘 POSTGRESQL — NINCS külső port (csak belső hálózat)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  bookforge-postgres:
+    image: postgres:16-alpine
+    container_name: bookforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    # ports: hiányzik — biztonság: csak belső Docker hálózaton érhető el
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🔴 REDIS — NINCS külső port (csak belső hálózat)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  bookforge-redis:
+    image: redis:7-alpine
+    container_name: bookforge-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass "${REDIS_PASSWORD}"
+    # ports: hiányzik — biztonság: csak belső Docker hálózaton érhető el
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🔄 DATABASE MIGRATIONS
+  # ═══════════════════════════════════════════════════════════════════════════════
+  bookforge-migrate:
+    image: gomicro/goose:latest
+    container_name: bookforge-migrate
+    profiles: ["migrate"]
+    depends_on:
+      bookforge-postgres:
+        condition: service_healthy
+    volumes:
+      - ./02_backend/migrations:/migrations:ro
+    networks:
+      - internal
+    entrypoint: > 
+      goose -dir /migrations postgres
+      "host=bookforge-postgres port=5432 user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} sslmode=disable"
+    command: ["up"]
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 🎯 CADDY — portok és config fájl .env-ből jön
+  # ═══════════════════════════════════════════════════════════════════════════════
+   bookforge-caddy:
+    image: caddy:2-alpine
+    container_name: bookforge-caddy
+    restart: unless-stopped
+    ports:
+      - "${CADDY_HTTP_PORT}:${CADDY_HTTP_PORT}"
+      - "${CADDY_HTTPS_PORT}:${CADDY_HTTPS_PORT}"
+    volumes:
+      - ./${CADDY_CONFIG}:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - frontend_net
+    depends_on:
+      - bookforge-frontend
+      - bookforge-backend
+
+   # bookforge-stripe-cli: NINCS — prod-on valódi Stripe webhook érkezik
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NETWORKS
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  frontend_net:
+    driver: bridge
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VOLUMES
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  redis_data:
