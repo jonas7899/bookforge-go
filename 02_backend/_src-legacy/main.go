@@ -1,13 +1,13 @@
 package main
 
 import (
-	"docstore/src/api"
-	"docstore/src/api/handlers"
-	"docstore/src/common/errors"
-	"docstore/src/config"
-	"docstore/src/db"
-	"docstore/src/logger"
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/api"
+	"bookforge-go-backend/_src-legacy/api/handlers"
+	"bookforge-go-backend/_src-legacy/common/errors"
+	"bookforge-go-backend/_src-legacy/config"
+	"bookforge-go-backend/_src-legacy/db"
+	"bookforge-go-backend/_src-legacy/logger"
+	"bookforge-go-backend/_src-legacy/messages"
 	"fmt"
 
 	"github.com/rs/zerolog/log"

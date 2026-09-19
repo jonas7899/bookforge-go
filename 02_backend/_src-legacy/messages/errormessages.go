@@ -1,9 +1,9 @@
 package messages
 
 const (
-	ApiStartMsg           = "API server docstore has been started"
-	ApiEndedGracefullyMsg = "API server docstore ended gracefully"
-	ApiFailedToStartMsg   = "Failed to start API server docstore"
+	ApiStartMsg           = "API server bookforge has been started"
+	ApiEndedGracefullyMsg = "API server bookforge ended gracefully"
+	ApiFailedToStartMsg   = "Failed to start API server bookforge"
 
 	InvalidTokenMsg = "invalid jwt token"
 	ExpiredTokenMsg = "expired jwt token"

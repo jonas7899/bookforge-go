@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"docstore/src/api/model"
-	"docstore/src/common/errors"
-	"docstore/src/config"
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/api/model"
+	"bookforge-go-backend/_src-legacy/common/errors"
+	"bookforge-go-backend/_src-legacy/config"
+	"bookforge-go-backend/_src-legacy/messages"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,7 +29,7 @@ type BuildInfoStruct struct {
 
 func (h *healthHandler) GetHealth(c *gin.Context) {
 	defaultInfo := model.HealthCheck{
-		Service:    "docstore",
+		Service:    "bookforge",
 		Status:     "running",
 		ApiVersion: []string{"v1"},
 	}

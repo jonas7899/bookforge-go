@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"docstore/src/config"
+	"bookforge-go-backend/_src-legacy/config"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -1,8 +1,8 @@
 package config
 
 import (
-	"docstore/src/common/errors"
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/common/errors"
+	"bookforge-go-backend/_src-legacy/messages"
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"

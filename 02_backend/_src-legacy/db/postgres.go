@@ -1,9 +1,9 @@
 package db
 
 import (
-	"docstore/src/common/errors"
-	"docstore/src/config"
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/common/errors"
+	"bookforge-go-backend/_src-legacy/config"
+	"bookforge-go-backend/_src-legacy/messages"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"

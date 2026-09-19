@@ -4,7 +4,7 @@ import (
 	olderr "errors"
 	"fmt"
 
-	"docstore/src/common/errors"
+	"bookforge-go-backend/_src-legacy/common/errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

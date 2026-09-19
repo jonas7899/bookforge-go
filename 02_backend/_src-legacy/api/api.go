@@ -1,10 +1,10 @@
 package api
 
 import (
-	"docstore/src/api/handlers"
-	"docstore/src/common/errors"
-	"docstore/src/config"
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/api/handlers"
+	"bookforge-go-backend/_src-legacy/common/errors"
+	"bookforge-go-backend/_src-legacy/config"
+	"bookforge-go-backend/_src-legacy/messages"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (api *api) RunAPI() {
 
 	log.Info().Msg(messages.ApiStartMsg)
 	if api.config.EnableTLS {
-		err = engine.RunTLS(fmt.Sprintf("docstore:%d", api.config.APIPort), api.config.CertPath, api.config.KeyPath)
+		err = engine.RunTLS(fmt.Sprintf("bookforge:%d", api.config.APIPort), api.config.CertPath, api.config.KeyPath)
 	} else {
 		err = engine.Run(fmt.Sprintf(":%d", api.config.APIPort))
 	}

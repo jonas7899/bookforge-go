@@ -1,7 +1,7 @@
 package api_errors
 
 import (
-	"docstore/src/messages"
+	"bookforge-go-backend/_src-legacy/messages"
 	"errors"
 )
 
