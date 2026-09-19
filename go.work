@@ -1,0 +1,7 @@
+go 1.25.7
+
+use (
+	./02_backend
+	./03_frontend_htmx
+	./04_common
+)

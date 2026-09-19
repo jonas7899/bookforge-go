@@ -1,0 +1,6 @@
+development:
+    dialect: postgres
+    datasource: host=${DB_SERVER} port=${DB_PORT} dbname=${DB_DATABASE} user=${DB_USER} password=${DB_PASS} sslmode=${DB_SSL_MODE}
+    dir: migrations
+    # Set this to the service schema, for example auth.goose_db_version.
+    table: auth.goose_db_version
